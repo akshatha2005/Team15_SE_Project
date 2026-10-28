@@ -1,11 +1,10 @@
 """Pygame front end: menu, board, score, game-over screen.
-(SNK-F-001, F-011, F-012, F-013, F-015, NF-001, NF-005)
+(SNK-F-001, F-011, F-012, F-013, NF-001, NF-005)
 """
 import pygame
 
 from snake_game.game_engine import GameEngine
 from snake_game.input_handler import key_to_direction
-from snake_game.storage import load_high_score, update_high_score
 
 CELL = 24
 GRID_W, GRID_H = 20, 20
@@ -50,7 +49,6 @@ class GameUI:
         self.engine.tick()
         if self.engine.game_over:
             self.state = "game_over"
-            update_high_score(self.engine.score.score)
 
     def handle_key(self, key):
         """Handle one key press. Returns False when the game should quit."""
@@ -80,8 +78,7 @@ class GameUI:
             if item == "Start":
                 self.start_game()
             elif item == "High Score":
-                hs = load_high_score()
-                self.message = f"High Score: {hs}"
+                self.message = "High score arrives in Sprint 2"
             else:
                 return False
         return True
@@ -121,11 +118,9 @@ class GameUI:
             pygame.draw.rect(self.screen, color, (x * CELL + 1, HUD + y * CELL + 1, CELL - 2, CELL - 2))
 
     def _draw_game_over(self):
-        hs = load_high_score()
         self._text("GAME OVER", self.big, RED, (WIDTH // 2, HEIGHT // 2 - 50))
-        self._text(f"Final score: {self.engine.score.score}", self.font, WHITE, (WIDTH // 2, HEIGHT // 2 - 10))
-        self._text(f"High score: {hs}", self.font, GREEN, (WIDTH // 2, HEIGHT // 2 + 25))
-        self._text("R = restart    Esc = menu", self.font, GREY, (WIDTH // 2, HEIGHT // 2 + 60))
+        self._text(f"Final score: {self.engine.score.score}", self.font, WHITE, (WIDTH // 2, HEIGHT // 2))
+        self._text("R = restart    Esc = menu", self.font, GREY, (WIDTH // 2, HEIGHT // 2 + 40))
 
     # ---------- main loop ----------
     def run(self):
