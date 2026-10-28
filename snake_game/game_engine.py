@@ -4,6 +4,7 @@ No pygame in here, so it can be unit tested without a display.
 """
 import random
 
+from snake_game.difficulty import tick_interval
 from snake_game.food import spawn_food
 from snake_game.score_manager import ScoreManager
 from snake_game.snake import Snake
@@ -23,6 +24,10 @@ class GameEngine:
         self.food = spawn_food(self.width, self.height, self.snake.body, self.rng)
         self.game_over = False
         self.paused = False
+
+    @property
+    def tick_ms(self):
+        return tick_interval(self.score.score)
 
     def toggle_pause(self):
         """Pause/resume active games; a finished game cannot be resumed."""

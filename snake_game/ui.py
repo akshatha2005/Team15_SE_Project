@@ -1,6 +1,7 @@
 """Pygame front end: board and live score. (SNK-F-013)"""
 import pygame
 
+from snake_game.difficulty import BASE_TICK_MS
 from snake_game.game_engine import GameEngine
 from snake_game.input_handler import key_to_direction
 
@@ -8,7 +9,7 @@ CELL = 24
 GRID_W, GRID_H = 20, 20
 HUD = 40
 WIDTH, HEIGHT = GRID_W * CELL, GRID_H * CELL + HUD
-TICK_MS = 150
+TICK_MS = BASE_TICK_MS
 
 BG = (20, 24, 28)
 GREEN = (80, 200, 120)
@@ -39,7 +40,7 @@ class GameUI:
             now = pygame.time.get_ticks()
         if self.engine.paused or self.engine.game_over:
             return
-        if now - self.last_tick >= TICK_MS:
+        if now - self.last_tick >= self.engine.tick_ms:
             self.step()
             self.last_tick = now
 

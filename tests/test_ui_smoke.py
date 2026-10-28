@@ -69,3 +69,21 @@ def test_pause_key_freezes_ui_and_resume_waits_for_next_tick(monkeypatch):
         assert ui.engine.snake.head == (before[0][0] + 1, before[0][1])
     finally:
         pygame.quit()
+
+
+
+def test_ui_schedules_using_score_dependent_interval():
+    ui = GameUI()
+    try:
+        ui.engine.food = (0, 0)
+        for _ in range(10):
+            ui.engine.score.add_food()
+        assert ui.engine.tick_ms == 110
+        before = ui.engine.snake.head
+        ui.last_tick = 1000
+        ui.advance(1109)
+        assert ui.engine.snake.head == before
+        ui.advance(1110)
+        assert ui.engine.snake.head == (before[0] + 1, before[1])
+    finally:
+        pygame.quit()
