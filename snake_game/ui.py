@@ -93,13 +93,20 @@ class GameUI:
     # ---------- main loop ----------
     def run(self):
         running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    running = self.handle_key(event.key)
-            self.advance()
-            self.draw()
-            self.clock.tick(60)
-        pygame.quit()
+        try:
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        break
+                    elif event.type == pygame.KEYDOWN:
+                        running = self.handle_key(event.key)
+                        if not running:
+                            break
+                if not running:
+                    break
+                self.advance()
+                self.draw()
+                self.clock.tick(60)
+        finally:
+            pygame.quit()
