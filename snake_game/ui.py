@@ -15,6 +15,7 @@ GREEN = (80, 200, 120)
 HEAD = (40, 150, 80)
 RED = (220, 70, 70)
 WHITE = (235, 235, 235)
+GRID = (35, 40, 45)
 
 
 class GameUI:
@@ -50,6 +51,13 @@ class GameUI:
         pygame.display.flip()
 
     def _draw_board(self):
+        # Fixed board is visible before the first movement tick (SNK-F-002).
+        for x in range(GRID_W + 1):
+            px = min(x * CELL, WIDTH - 1)
+            pygame.draw.line(self.screen, GRID, (px, HUD), (px, HEIGHT - 1))
+        for y in range(GRID_H + 1):
+            py = min(HUD + y * CELL, HEIGHT - 1)
+            pygame.draw.line(self.screen, GRID, (0, py), (WIDTH - 1, py))
         self._text(f"Score: {self.engine.score.score}", self.font, WHITE, (70, HUD // 2))
         if self.engine.food:
             fx, fy = self.engine.food

@@ -26,3 +26,20 @@ def test_score_updates_after_eating_food():                         # SNK-F-013
     assert ui.engine.score.score == POINTS_PER_FOOD
     ui.draw()
     pygame.quit()
+
+
+def test_board_and_centred_snake_are_drawn_before_first_tick():
+    from snake_game.ui import CELL, GRID, GRID_W, GRID_H, HEAD, HUD
+
+    ui = GameUI()
+    try:
+        initial_body = list(ui.engine.snake.body)
+        ui.draw()
+        assert ui.engine.snake.head == (GRID_W // 2, GRID_H // 2)
+        assert len(initial_body) == 3
+        assert ui.engine.snake.body == initial_body
+        assert ui.screen.get_at((CELL, HUD + CELL))[:3] == GRID
+        x, y = ui.engine.snake.head
+        assert ui.screen.get_at((x * CELL + CELL // 2, HUD + y * CELL + CELL // 2))[:3] == HEAD
+    finally:
+        pygame.quit()
