@@ -1,4 +1,5 @@
-"""Pygame front end: board and live score. (SNK-F-013)"""
+"""Pygame front end: menu, board, score, game-over screen.
+(SNK-F-001, F-011, F-013)"""
 import pygame
 
 from snake_game.game_engine import GameEngine
@@ -9,12 +10,14 @@ GRID_W, GRID_H = 20, 20
 HUD = 40
 WIDTH, HEIGHT = GRID_W * CELL, GRID_H * CELL + HUD
 TICK_MS = 150
+MENU_ITEMS = ["Start", "High Score", "Exit"]
 
 BG = (20, 24, 28)
 GREEN = (80, 200, 120)
 HEAD = (40, 150, 80)
 RED = (220, 70, 70)
 WHITE = (235, 235, 235)
+GREY = (140, 140, 140)
 
 
 class GameUI:
@@ -24,19 +27,55 @@ class GameUI:
         pygame.display.set_caption("Snake Game")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 30)
+        self.big = pygame.font.SysFont(None, 56)
         self.engine = GameEngine(GRID_W, GRID_H)
-        self.last_tick = pygame.time.get_ticks()
+        self.state = "menu"          # menu / playing / game_over
+        self.selected = 0
+        self.message = ""
+        self.last_tick = 0
 
     # ---------- logic ----------
+    def start_game(self):
+        self.engine.reset()
+        self.state = "playing"
+        self.message = ""
+        self.last_tick = pygame.time.get_ticks()
+
     def step(self):
-        """Advance the game by one tick."""
+        """Advance the game by one tick and update the screen state."""
         self.engine.tick()
+        if self.engine.game_over:
+            self.state = "game_over"
 
     def handle_key(self, key):
-        """Handle one key press."""
-        direction = key_to_direction(pygame.key.name(key))
-        if direction:
-            self.engine.set_direction(direction)
+        """Handle one key press. Returns False when the game should quit."""
+        name = pygame.key.name(key)
+        if self.state == "menu":
+            return self._menu_key(name)
+        if self.state == "playing":
+            direction = key_to_direction(name)
+            if direction:
+                self.engine.set_direction(direction)
+            elif name == "escape":
+                self.state = "menu"
+        elif self.state == "game_over":
+            if name == "escape":
+                self.state = "menu"
+        return True
+
+    def _menu_key(self, name):
+        if name in ("up", "w"):
+            self.selected = (self.selected - 1) % len(MENU_ITEMS)
+        elif name in ("down", "s"):
+            self.selected = (self.selected + 1) % len(MENU_ITEMS)
+        elif name == "return":
+            item = MENU_ITEMS[self.selected]
+            if item == "Start":
+                self.start_game()
+            elif item == "High Score":
+                self.message = "High score arrives in Sprint 2"
+            else:
+                return False
         return True
 
     # ---------- drawing ----------
@@ -46,8 +85,23 @@ class GameUI:
 
     def draw(self):
         self.screen.fill(BG)
-        self._draw_board()
+        if self.state == "menu":
+            self._draw_menu()
+        else:
+            self._draw_board()
+            if self.state == "game_over":
+                self._draw_game_over()
         pygame.display.flip()
+
+    def _draw_menu(self):
+        self._text("SNAKE", self.big, GREEN, (WIDTH // 2, 120))
+        for i, item in enumerate(MENU_ITEMS):
+            color = WHITE if i == self.selected else GREY
+            label = f"> {item}" if i == self.selected else item
+            self._text(label, self.font, color, (WIDTH // 2, 220 + i * 45))
+        if self.message:
+            self._text(self.message, self.font, RED, (WIDTH // 2, 420))
+        self._text("Up/Down + Enter", self.font, GREY, (WIDTH // 2, HEIGHT - 30))
 
     def _draw_board(self):
         self._text(f"Score: {self.engine.score.score}", self.font, WHITE, (70, HUD // 2))
@@ -58,6 +112,11 @@ class GameUI:
             color = HEAD if i == 0 else GREEN
             pygame.draw.rect(self.screen, color, (x * CELL + 1, HUD + y * CELL + 1, CELL - 2, CELL - 2))
 
+    def _draw_game_over(self):
+        self._text("GAME OVER", self.big, RED, (WIDTH // 2, HEIGHT // 2 - 50))
+        self._text(f"Final score: {self.engine.score.score}", self.font, WHITE, (WIDTH // 2, HEIGHT // 2))
+        self._text("Esc = menu", self.font, GREY, (WIDTH // 2, HEIGHT // 2 + 40))
+
     # ---------- main loop ----------
     def run(self):
         running = True
@@ -67,10 +126,11 @@ class GameUI:
                     running = False
                 elif event.type == pygame.KEYDOWN:
                     running = self.handle_key(event.key)
-            now = pygame.time.get_ticks()
-            if now - self.last_tick >= TICK_MS:
-                self.step()
-                self.last_tick = now
+            if self.state == "playing":
+                now = pygame.time.get_ticks()
+                if now - self.last_tick >= TICK_MS:
+                    self.step()
+                    self.last_tick = now
             self.draw()
             self.clock.tick(60)
         pygame.quit()
