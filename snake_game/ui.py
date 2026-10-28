@@ -33,8 +33,25 @@ class GameUI:
         """Advance the game by one tick."""
         self.engine.tick()
 
+    def advance(self, now=None):
+        """Schedule movement independently from rendering; paused time is ignored."""
+        if now is None:
+            now = pygame.time.get_ticks()
+        if self.engine.paused or self.engine.game_over:
+            return
+        if now - self.last_tick >= TICK_MS:
+            self.step()
+            self.last_tick = now
+
     def handle_key(self, key):
         """Handle one key press."""
+        if key == pygame.K_p:
+            was_paused = self.engine.paused
+            self.engine.toggle_pause()
+            if was_paused and not self.engine.paused:
+                # Resume with a full interval instead of catching up paused ticks.
+                self.last_tick = pygame.time.get_ticks()
+            return True
         direction = key_to_direction(pygame.key.name(key))
         if direction:
             self.engine.set_direction(direction)
@@ -48,6 +65,12 @@ class GameUI:
     def draw(self):
         self.screen.fill(BG)
         self._draw_board()
+        if self.engine.paused:
+            panel = pygame.Rect(WIDTH // 2 - 120, HEIGHT // 2 - 30, 240, 90)
+            pygame.draw.rect(self.screen, BG, panel)
+            pygame.draw.rect(self.screen, GRID, panel, 2)
+            self._text("PAUSED", self.font, WHITE, (WIDTH // 2, HEIGHT // 2))
+            self._text("P = resume", self.font, WHITE, (WIDTH // 2, HEIGHT // 2 + 30))
         pygame.display.flip()
 
     def _draw_board(self):
@@ -75,10 +98,7 @@ class GameUI:
                     running = False
                 elif event.type == pygame.KEYDOWN:
                     running = self.handle_key(event.key)
-            now = pygame.time.get_ticks()
-            if now - self.last_tick >= TICK_MS:
-                self.step()
-                self.last_tick = now
+            self.advance()
             self.draw()
             self.clock.tick(60)
         pygame.quit()

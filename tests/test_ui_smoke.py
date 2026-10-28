@@ -43,3 +43,29 @@ def test_board_and_centred_snake_are_drawn_before_first_tick():
         assert ui.screen.get_at((x * CELL + CELL // 2, HUD + y * CELL + CELL // 2))[:3] == HEAD
     finally:
         pygame.quit()
+
+
+
+def test_pause_key_freezes_ui_and_resume_waits_for_next_tick(monkeypatch):
+    from snake_game.ui import TICK_MS
+
+    ui = GameUI()
+    try:
+        ui.engine.food = (0, 0)
+        before = list(ui.engine.snake.body)
+        ui.handle_key(pygame.K_p)
+        ui.handle_key(pygame.K_UP)
+        ui.advance(ui.last_tick + 10000)
+        ui.step()
+        ui.draw()
+        assert ui.engine.paused
+        assert ui.engine.snake.body == before
+        monkeypatch.setattr(pygame.time, "get_ticks", lambda: 20000)
+        ui.handle_key(pygame.K_p)
+        assert not ui.engine.paused
+        ui.advance(20000 + TICK_MS - 1)
+        assert ui.engine.snake.body == before
+        ui.advance(20000 + TICK_MS)
+        assert ui.engine.snake.head == (before[0][0] + 1, before[0][1])
+    finally:
+        pygame.quit()

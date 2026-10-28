@@ -22,16 +22,23 @@ class GameEngine:
         self.score.reset()
         self.food = spawn_food(self.width, self.height, self.snake.body, self.rng)
         self.game_over = False
+        self.paused = False
+
+    def toggle_pause(self):
+        """Pause/resume active games; a finished game cannot be resumed."""
+        if not self.game_over:
+            self.paused = not self.paused
 
     def set_direction(self, direction):
-        self.snake.set_direction(direction)
+        if not self.paused and not self.game_over:
+            self.snake.set_direction(direction)
 
     def in_bounds(self, cell):
         x, y = cell
         return 0 <= x < self.width and 0 <= y < self.height
 
     def tick(self):
-        if self.game_over:
+        if self.game_over or self.paused:
             return
         new_head = self.snake.next_head()
         if not self.in_bounds(new_head):
