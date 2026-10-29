@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import stat
 
@@ -112,6 +112,7 @@ def test_update_high_score_invalid_score_raises(tmp_path, bad):     # SNK-F-015
 
 # ---------- SNK-SR-004: restrict file access to own save file ----------
 
+@pytest.mark.skipif(os.name == 'nt', reason='POSIX file permissions do not apply on Windows')
 def test_save_sets_owner_only_permissions(tmp_path):                # SNK-SR-004
     path = str(tmp_path / "hs.json")
     save_high_score(40, path)
