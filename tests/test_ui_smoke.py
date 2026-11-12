@@ -117,6 +117,7 @@ def test_ui_schedules_using_score_dependent_interval(ui):           # SNK-F-018
 
 def test_game_over_saves_a_new_high_score(ui, hs_path):             # SNK-F-014/015
     ui.start_game()
+    ui.engine.food = (0, 0)  # Keep random food out of the path to the right wall.
     ui.engine.score.add_food()
     ui.engine.score.add_food()
     play_until_game_over(ui)
