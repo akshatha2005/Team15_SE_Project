@@ -7,7 +7,11 @@ A desktop Snake game built with Python and Pygame, alongside its SE documents.
 
 Open **Actions → Snake Game CI/CD → a run** to see the live job dependency graph.
 Each job writes its result and a description to the run's **Summary** page.
-The final overview lists every stage, including failures and skipped jobs.
+The quality gate and final overview include a **Code quality scorecard** with the
+measured combined coverage percentage, line/branch coverage, Pylint rating out of
+10, lint finding count and test totals. These are native GitHub job summaries
+written to `GITHUB_STEP_SUMMARY`. The final overview also lists every stage,
+including failures and skipped jobs.
 
 ```mermaid
 flowchart LR
@@ -28,7 +32,7 @@ flowchart LR
 | Stage | Summary and evidence |
 | --- | --- |
 | Source validation | Compile the application, tests and CI scripts; validate package metadata and release tags. |
-| Code and workflow quality | Ruff correctness checks and actionlint validation of the workflow. |
+| Code and workflow quality | Pylint rating of at least 8/10 with no error/fatal findings for `snake_game/` and `main.py`, Ruff correctness checks and actionlint workflow validation; JSON findings artifact. |
 | Dependency security | pip-audit rejects known vulnerabilities in resolved application/test dependencies; JSON audit artifact. |
 | Tests and branch coverage | Full pytest suite, JUnit results and HTML/XML coverage; at least 85% combined statement/branch coverage. |
 | Platform tests | Full suite on Windows, macOS and Linux with Python 3.12 and 3.13; six separate result artifacts. |
@@ -48,6 +52,7 @@ To run the main checks locally:
 ```sh
 python -m pip install -r requirements-ci.txt
 python -m ruff check snake_game tests .github/scripts main.py
+python -m pylint snake_game main.py --extension-pkg-allow-list=pygame --fail-under=8.0 --fail-on=E,F
 python -m pytest --cov=snake_game --cov-branch --cov-fail-under=85
 python -m build
 python -m twine check --strict dist/*

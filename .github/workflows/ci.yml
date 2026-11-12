@@ -61,10 +61,13 @@ jobs:
           --description "Compile application, tests and automation; check package metadata and version tags."
 
   quality:
-    name: 2a. Code and workflow quality
+    name: 2a. Lint score and workflow quality
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      lint_score: ${{ steps.metrics.outputs.lint_score }}
+      lint_findings: ${{ steps.metrics.outputs.lint_findings }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -73,21 +76,36 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install Ruff
-        run: python -m pip install "ruff>=0.11,<1"
+          cache-dependency-path: |
+            requirements.txt
+            requirements-ci.txt
+      - name: Install lint tools and application dependencies
+        run: python -m pip install -r requirements-ci.txt
       - name: Check Python correctness
         run: python -m ruff check snake_game tests .github/scripts main.py
+      - name: Measure Pylint score (minimum 8 out of 10)
+        run: |
+          mkdir -p reports
+          python -m pylint snake_game main.py --extension-pkg-allow-list=pygame --output-format=json2 --fail-under=8.0 --fail-on=E,F > reports/pylint.json
       - name: Validate GitHub Actions syntax
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/ci.yml
+      - name: Upload Pylint findings and score
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pylint-report
+          path: reports/pylint.json
+          retention-days: 14
       - name: Code quality summary
+        id: metrics
         if: always()
         env:
           JOB_RESULT: ${{ job.status }}
         run: >-
           python .github/scripts/ci_summary.py
-          --title "Code and workflow quality"
-          --description "Ruff checks Python correctness; actionlint checks job dependencies, expressions and workflow syntax."
+          --title "Lint score and workflow quality"
+          --description "Pylint measures application code quality; Ruff checks Python correctness; actionlint validates the workflow."
+          --lint reports/pylint.json
 
   security:
     name: 2b. Dependency security
@@ -133,6 +151,14 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      coverage_percent: ${{ steps.metrics.outputs.coverage_percent }}
+      line_coverage: ${{ steps.metrics.outputs.line_coverage }}
+      branch_coverage: ${{ steps.metrics.outputs.branch_coverage }}
+      tests_total: ${{ steps.metrics.outputs.tests_total }}
+      tests_passed: ${{ steps.metrics.outputs.tests_passed }}
+      tests_failed: ${{ steps.metrics.outputs.tests_failed }}
+      tests_skipped: ${{ steps.metrics.outputs.tests_skipped }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -151,6 +177,7 @@ jobs:
           python -m pytest -v --junitxml=reports/tests.xml
           --cov=snake_game --cov-branch --cov-fail-under=85
           --cov-report=term-missing --cov-report=xml:reports/coverage.xml
+          --cov-report=json:reports/coverage.json
           --cov-report=html:reports/coverage-html
       - name: Upload tests and coverage
         if: always()
@@ -160,6 +187,7 @@ jobs:
           path: reports/
           retention-days: 14
       - name: Tests and coverage summary
+        id: metrics
         if: always()
         env:
           JOB_RESULT: ${{ job.status }}
@@ -168,6 +196,7 @@ jobs:
           --title "Tests and branch coverage"
           --description "Run all gameplay, storage, UI and launcher tests with an 85% combined coverage gate."
           --junit reports/tests.xml --coverage reports/coverage.xml
+          --coverage-json reports/coverage.json
 
   platform-tests:
     name: 2d. Platform tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
