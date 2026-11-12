@@ -10,5 +10,10 @@ This document records any variances or adjustments from the initial project scop
   * **Test Case Presentation:** The Test Plan was expanded to incorporate robust automated test-driven validation (95 passing tests) alongside the structured functional/non-functional coverage.
   * **Architecture Refinement:** The SAD was tailored specifically to document the modular event-driven structure of the Pygame engine (`game_engine.py`, `ui.py`, `storage.py`) rather than generic enterprise microservice patterns.
 
-## 2. Conclusion
-All planned milestones for Sprint 1 and Sprint 2 have been fulfilled with complete test coverage and proper documentation.
+## 2. Sprint organization
+The existing tracker is organized into three GitHub milestones: Core Gameplay;
+Persistence and Advanced Gameplay; and Quality, Security and Delivery. Existing
+issue states are retained, and future online-leaderboard work remains in the backlog.
+See [the sprint plan](sprints.md) for the issue mapping and acceptance criteria.
+CI/CD now produces current test and coverage evidence on each run. Native desktop
+acceptance still requires the manual checks documented in README.

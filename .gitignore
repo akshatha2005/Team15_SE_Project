@@ -4,3 +4,11 @@ __pycache__/
 highscore.json
 highscore.json.tmp
 .venv/
+.coverage
+coverage.xml
+htmlcov/
+reports/
+build/
+dist/
+*.egg-info/
+.ruff_cache/

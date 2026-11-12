@@ -1,6 +1,75 @@
 # Team15_SE_Project
 A desktop Snake game built with Python and Pygame, alongside its SE documents.
 
+## CI/CD pipeline
+
+[![Snake Game CI/CD](https://github.com/akshatha2005/Team15_SE_Project/actions/workflows/ci.yml/badge.svg)](https://github.com/akshatha2005/Team15_SE_Project/actions/workflows/ci.yml)
+
+Open **Actions → Snake Game CI/CD → a run** to see the live job dependency graph.
+Each job writes its result and a description to the run's **Summary** page.
+The final overview lists every stage, including failures and skipped jobs.
+
+```mermaid
+flowchart LR
+    V[Source validation] --> Q[Code and workflow quality]
+    V --> S[Dependency security]
+    V --> T[Tests and branch coverage]
+    V --> P[Platform tests: 3 OSes x 2 Python versions]
+    Q --> G[Quality gate]
+    S --> G
+    T --> G
+    P --> G
+    G --> B[Build wheel and source archive]
+    B --> I[Install smoke tests: 3 OSes]
+    I --> R[GitHub Release: version tags]
+    R --> O[Pipeline overview: always]
+```
+
+| Stage | Summary and evidence |
+| --- | --- |
+| Source validation | Compile the application, tests and CI scripts; validate package metadata and release tags. |
+| Code and workflow quality | Ruff correctness checks and actionlint validation of the workflow. |
+| Dependency security | pip-audit rejects known vulnerabilities in resolved application/test dependencies; JSON audit artifact. |
+| Tests and branch coverage | Full pytest suite, JUnit results and HTML/XML coverage; at least 85% combined statement/branch coverage. |
+| Platform tests | Full suite on Windows, macOS and Linux with Python 3.12 and 3.13; six separate result artifacts. |
+| Quality gate | Every validation and test branch must succeed before packaging. |
+| Build distributions | Validate a Python wheel and source archive with Twine; upload both with SHA-256 checksums. |
+| Installed game checks | Verify checksums and exercise the installed module and console entry point outside the source tree on each OS. |
+| GitHub Release | On a matching `v*` tag whose commit belongs to `main`, publish the tested distributions and checksums. |
+| Pipeline overview | Always report the result of every stage; fail if a required stage failed or was skipped. |
+
+Pull requests, pushes to `main`, version tags and manual dispatches run the pipeline.
+Release publishing is skipped for pull requests, ordinary branch pushes and manual runs.
+Test/audit reports are retained for 14 days; package artifacts for 30 days.
+Headless checks use SDL dummy drivers; native desktop acceptance remains a manual check.
+
+To run the main checks locally:
+
+```sh
+python -m pip install -r requirements-ci.txt
+python -m ruff check snake_game tests .github/scripts main.py
+python -m pytest --cov=snake_game --cov-branch --cov-fail-under=85
+python -m build
+python -m twine check --strict dist/*
+```
+
+For a release, merge the desired version into `main`, set `project.version` in
+`pyproject.toml`, and push the matching tag (for example `v1.0.0`). All checks must
+pass before the release job publishes. Download the wheel from the run artifacts
+or GitHub Releases, install it with `python -m pip install <wheel-file>`, then run
+`team15-snake` or `python -m snake_game`. Python and Pygame are required; the wheel
+is a Python package rather than a standalone desktop executable.
+
+## Sprint milestones
+
+Work is tracked in three [GitHub milestones](https://github.com/akshatha2005/Team15_SE_Project/milestones):
+
+1. **Sprint 1 - Core Gameplay:** menu, board, movement, input, food, scoring and collisions.
+2. **Sprint 2 - Persistence and Advanced Gameplay:** high scores, pause/resume, restart, difficulty and the game loop.
+3. **Sprint 3 - Quality, Security and Delivery:** stability, platform checks, security and CI/CD.
+
+See [the sprint plan](docs/sprints.md) for issue assignments and acceptance criteria.
+
 ## Team Members
 
 | Name                | SRN            |
